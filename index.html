@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>我们的情侣刮刮乐</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{--pink:#ff6fae;--rose:#ff4f8f;--soft:#fff1f7;--gold:#ffbf57;--ink:#5b3346}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{margin:0;min-height:100vh;font-family:"Microsoft YaHei",system-ui,sans-serif;color:var(--ink);overflow-x:hidden;background:radial-gradient(circle at 20% 10%,#fff 0 10%,transparent 30%),linear-gradient(135deg,#ffd7e8 0%,#fff6fb 48%,#ffe5f0 100%)}
+    .float-heart{position:fixed;bottom:-40px;font-size:18px;opacity:.5;animation:heartUp linear forwards;pointer-events:none;z-index:0}
+    @keyframes heartUp{to{transform:translateY(-110vh) rotate(25deg);opacity:0}}
+    .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.8);box-shadow:0 20px 55px rgba(255,79,143,.22)}
+    .scratch-card{position:relative;width:min(88vw,420px);height:230px;margin:0 auto;border-radius:28px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 18px 45px rgba(255,79,143,.28);transform:translateZ(0)}
+    .prize-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px;background:linear-gradient(135deg,#fff7dd,#fff,#ffe3f0);font-weight:800;color:#e44c88;line-height:1.55}
+    .prize-type{font-size:13px;letter-spacing:.18em;color:#b27638;margin-bottom:10px}
+    .prize-name{font-size:25px;white-space:pre-line}
+    #scratchCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:pointer;z-index:2}
+    .progress{width:min(88vw,420px);height:10px;background:rgba(255,255,255,.75);border-radius:999px;margin:16px auto 0;overflow:hidden}.bar{height:100%;width:0;background:linear-gradient(90deg,#ff77b4,#ffbf57);border-radius:999px;transition:.2s}
+    .primary{background:linear-gradient(135deg,#ff5f9e,#ff96c7);color:white;box-shadow:0 10px 25px rgba(255,95,158,.28)}
+    .ghost{background:rgba(255,255,255,.75);color:#d94682;border:1px solid rgba(255,111,174,.28)}
+    .danger{background:rgba(255,255,255,.75);color:#dc2626;border:1px solid rgba(220,38,38,.22)}
+    button{border:0;border-radius:999px;font-weight:800;transition:.18s;cursor:pointer}button:active{transform:scale(.96)}button:disabled{opacity:.45;cursor:not-allowed}
+    input,select,textarea{outline:none}.hidden-door{position:fixed;right:14px;bottom:14px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.6);color:rgba(255,79,143,.45);z-index:10}.hidden-door:hover{color:#ff4f8f;background:white}
+    .data-door{position:fixed;left:14px;bottom:14px;height:46px;padding:0 15px;border-radius:999px;background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.7);color:#d94682;z-index:10}.data-door:hover{background:white}
+    .drawer-mask{position:fixed;inset:0;background:rgba(53,21,37,.35);display:none;z-index:20}.drawer-mask.show{display:block}.drawer{position:absolute;right:0;top:0;width:min(94vw,620px);height:100%;background:#fff9fc;box-shadow:-16px 0 40px rgba(0,0,0,.18);transform:translateX(100%);transition:.28s ease;padding:22px;overflow:auto}.drawer-mask.show .drawer{transform:translateX(0)}
+    .drawer-left{left:0;right:auto;transform:translateX(-100%);box-shadow:16px 0 40px rgba(0,0,0,.18)}.drawer-mask.show .drawer-left{transform:translateX(0)}
+    .tab.active{background:#ff6fae;color:white}.mini-table{width:100%;border-collapse:collapse;font-size:13px}.mini-table th,.mini-table td{padding:10px;border-bottom:1px solid #f5d7e5;text-align:left;vertical-align:top}.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:rgba(91,51,70,.92);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:40}.toast.show{opacity:1;top:28px}.confetti{position:fixed;width:9px;height:14px;border-radius:3px;animation:fall 2.8s ease-in forwards;z-index:30}@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+    .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:#fff;border:1px solid #ffd1e3;color:#d94682;font-size:12px;font-weight:800}.muted{color:#8b7280}.small-btn{border-radius:999px;padding:5px 10px;font-size:12px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}.section-box{background:rgba(255,255,255,.68);border:1px solid #ffe0ec;border-radius:20px;padding:14px}.login-panel{width:min(92vw,430px)}
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+
+  <section id="loginScreen" class="relative z-[2] min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="glass login-panel rounded-[32px] p-6 text-center">
+      <div class="text-sm tracking-[.35em] text-pink-500 font-bold">LOVE LOGIN</div>
+      <h1 class="text-3xl font-black mt-2 mb-2">进入情侣刮刮乐</h1>
+      <p class="text-sm text-gray-500 mb-5">请输入正确用户名后进入。阿晓为管理员，晓丹为普通用户。</p>
+      <input id="loginName" class="w-full border rounded-2xl px-4 py-4 text-center text-lg font-black bg-white" placeholder="请输入用户名" autocomplete="off" />
+      <button id="loginBtn" class="primary w-full h-12 mt-4">进入</button>
+      <p id="loginError" class="text-sm text-red-500 mt-3 min-h-[22px]"></p>
+      <div class="text-xs text-gray-400 mt-4 leading-6">
+    
+        登录后只能以自己的身份写卡和刮卡
+      </div>
+    </div>
+  </section>
+
+  <main id="appMain" class="relative z-[1] min-h-screen flex items-center justify-center px-4 py-8 hidden">
+    <section class="glass w-full max-w-[560px] rounded-[32px] p-6 text-center">
+      <div class="text-sm tracking-[.35em] text-pink-500 font-bold">LOVE SCRATCH</div>
+      <h1 class="text-3xl font-black mt-2 mb-2">我们的情侣刮刮乐</h1>
+      <p class="text-sm text-gray-500 mb-4">先选择当前身份，只能刮「对方写给你」的刮刮乐</p>
+
+      <div class="section-box mb-5 text-left">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+          <label class="block">
+            <span class="text-xs font-bold text-pink-500">当前我是</span>
+            <select id="currentUser" class="w-full border rounded-xl px-3 py-3 mt-1 bg-white"></select>
+          </label>
+          <div class="text-sm">
+            <div class="font-black text-pink-600" id="dailyText">今日次数：加载中</div>
+            <div class="text-xs text-gray-500 mt-1" id="targetText">等待数据加载</div>
+            <button id="logoutBtn" class="ghost h-8 px-3 text-xs mt-2">退出登录</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="scratch-card" id="scratchCard">
+        <div class="prize-content">
+          <div class="prize-type" id="prizeType">今日小卡片</div>
+          <div class="prize-name" id="prizeContent">准备中...</div>
+        </div>
+        <canvas id="scratchCanvas"></canvas>
+      </div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <div class="text-xs text-gray-400 mt-2" id="statusText">刮开 55% 自动开奖</div>
+
+      <div class="grid grid-cols-2 gap-3 mt-6">
+        <button id="newCardBtn" class="primary h-12">重新盖上</button>
+        <button id="copyBtn" class="ghost h-12">复制结果</button>
+      </div>
+      <p class="text-xs text-gray-400 mt-5">右下角「♡」写给对方；</p>
+    </section>
+  </main>
+
+  <button class="data-door" id="openDataBtn" title="数据库面板" style="display:none">🗄 数据</button>
+  <button class="hidden-door" id="openAdminBtn" title="写给对方" style="display:none">♡</button>
+
+  <div class="drawer-mask" id="adminMask">
+    <aside class="drawer">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-black text-pink-600">写给对方的刮刮乐</h2>
+        <button id="closeAdminBtn" class="ghost px-4 h-9">关闭</button>
+      </div>
+      <div class="section-box mb-5">
+        <p class="text-sm text-gray-500 mb-3">这里新增的是「我写给对方」的卡片。写的人自己不会抽到，只会让对方抽到。</p>
+        <form id="prizeForm" class="grid grid-cols-1 gap-3">
+          <div class="grid grid-cols-2 gap-3">
+            <label>
+              <span class="text-xs font-bold text-pink-500">我是谁</span>
+              <select id="fromUser" class="w-full border rounded-xl px-3 py-3 mt-1 bg-white"></select>
+            </label>
+            <label>
+              <span class="text-xs font-bold text-pink-500">写给谁</span>
+              <select id="toUser" class="w-full border rounded-xl px-3 py-3 mt-1 bg-white"></select>
+            </label>
+          </div>
+          <textarea id="prizeName" class="border rounded-xl px-3 py-3 min-h-[86px]" placeholder="内容：比如 今晚语音哄睡10分钟 / 下次见面多抱你3分钟" required></textarea>
+          <div class="grid grid-cols-2 gap-3">
+            <input id="prizeCount" type="number" min="1" value="1" class="border rounded-xl px-3 py-3" placeholder="数量" required />
+            <select id="prizeCategory" class="border rounded-xl px-3 py-3 bg-white">
+              <option value="情话">情话</option><option value="奖励">奖励</option><option value="惩罚">惩罚</option><option value="纪念日">纪念日</option><option value="隐藏惊喜">隐藏惊喜</option>
+            </select>
+          </div>
+          <button class="primary h-11" type="submit">写给对方</button>
+        </form>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <button class="tab active h-10" data-tab="prizes">卡片池</button>
+        <button class="tab h-10 ghost" data-tab="records">开奖记录</button>
+      </div>
+      <section id="prizesPanel">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button id="seedBtn" class="ghost h-9 px-4 text-sm">生成双向示例</button>
+          <button id="exportBtn" class="ghost h-9 px-4 text-sm">复制数据</button>
+          <button id="refreshBtn" class="ghost h-9 px-4 text-sm">刷新</button>
+        </div>
+        <div class="overflow-auto"><table class="mini-table"><thead><tr><th>方向</th><th>类型</th><th>内容</th><th>剩余</th></tr></thead><tbody id="prizeList"></tbody></table></div>
+      </section>
+      <section id="recordsPanel" class="hidden">
+        <div class="overflow-auto"><table class="mini-table"><thead><tr><th>#</th><th>时间</th><th>方向</th><th>结果</th><th>兑现</th></tr></thead><tbody id="recordList"></tbody></table></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="drawer-mask" id="dataMask">
+    <aside class="drawer drawer-left">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-black text-pink-600">数据库面板</h2>
+        <button id="closeDataBtn" class="ghost px-4 h-9">关闭</button>
+      </div>
+
+      <div class="section-box mb-4">
+        <h3 class="font-black mb-2">用户与每日次数设置</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="userAInput" class="border rounded-xl px-3 py-3 bg-gray-100" placeholder="管理员" disabled />
+          <input id="userBInput" class="border rounded-xl px-3 py-3 bg-gray-100" placeholder="普通用户" disabled />
+          <input id="dailyLimitInput" type="number" min="0" class="border rounded-xl px-3 py-3" placeholder="每天可刮次数" />
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button id="saveSettingsBtn" class="primary h-9 px-4 text-sm">保存设置</button>
+          <button id="clearTokenBtn" class="ghost h-9 px-4 text-sm">清除本机管理密码</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">用户名固定为阿晓 / 晓丹，只允许管理员修改每日次数。每天次数填 0 表示不限制。</p>
+      </div>
+
+      <div class="section-box mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-black">卡片池 CRUD</h3>
+          <button id="dbRefreshBtn" class="ghost h-8 px-3 text-xs">刷新</button>
+        </div>
+        <div class="overflow-auto max-h-[260px]"><table class="mini-table"><thead><tr><th>方向</th><th>内容</th><th>剩余</th><th>操作</th></tr></thead><tbody id="dbPrizeList"></tbody></table></div>
+      </div>
+
+      <div class="section-box mb-4">
+        <h3 class="font-black mb-2">开奖记录 / 兑现</h3>
+        <div class="overflow-auto max-h-[260px]"><table class="mini-table"><thead><tr><th>方向</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody id="dbRecordList"></tbody></table></div>
+      </div>
+
+      <div class="section-box">
+        <div class="flex flex-wrap gap-2 mb-2">
+          <button id="copyJsonBtn" class="ghost h-8 px-3 text-xs">复制JSON</button>
+          <button id="downloadJsonBtn" class="ghost h-8 px-3 text-xs">下载JSON</button>
+          <button id="saveJsonBtn" class="danger h-8 px-3 text-xs">整体保存JSON</button>
+        </div>
+        <textarea id="jsonArea" class="mono w-full border rounded-xl px-3 py-3 min-h-[220px] text-xs bg-white"></textarea>
+        <p class="text-xs text-gray-500 mt-2">整体保存 JSON 需要管理密码，适合你手动修复数据。格式错会保存失败。</p>
+      </div>
+    </aside>
+  </div>
+
+  <script src="./love-scratch-enhanced.js"></script>
+</body>
+</html>
